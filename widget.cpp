@@ -10,7 +10,7 @@ Widget::Widget(QWidget *parent) :
     this->initForm();
     //初始化分割符
     this->initSplitterForm();
-
+    this->initSerial();
 }
 
 Widget::~Widget()
@@ -25,6 +25,25 @@ bool Widget::eventFilter(QObject *watched, QEvent *event)
             on_btnMenu_Max_clicked();
             return true;
         }
+    }
+
+    if(watched == ui->textBrowser->viewport())//指定某个QLabel
+    {
+        if (event->type() == QEvent::MouseButtonPress)//mouse button pressed
+         {
+             //qDebug() << __FILE__<<__LINE__<< QString::number(event->type());
+             QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+             if(mouseEvent->button() == Qt::LeftButton) //判断是否鼠标左键事件
+             {
+                 qDebug()<<"deal dsrc message";
+                 QTextCursor tc;
+                 tc = ui->textBrowser->textCursor();
+                 qDebug()<<tc.block().text();
+                 ui->TeditContent->setText(tc.block().text());
+                 //qDebug()<<ui->textBrowser;
+                 //return QWidget::eventFilter(watched, event);
+             }
+         }
     }
 
     return QWidget::eventFilter(watched, event);
@@ -89,6 +108,9 @@ void Widget::initForm()
     }
 
     ui->btnMain->click();
+ui->textBrowser->viewport()->installEventFilter(this);
+   // ui->textBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);//设置垂直滚动条不可见
+   // ui->textBrowser->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);//设置水平滚动条不可见
 }
 
 void Widget::buttonClick()
@@ -146,21 +168,29 @@ void Widget::on_btnMenu_Max_clicked()
 
 void Widget::initSplitterForm()
 {
-    m_Lframe = ui->labContent;
+    m_Lframe = ui->TeditContent;
     m_Rframe=ui->textBrowser;
     m_sp= ui->splitter;
 
 
     //初始化分隔符
     m_pButton= new QPushButton(ui->page1); // after Splitter
+    m_pBtnCom = new QPushButton(ui->page1); //串口控制的按钮
     m_bInitShow=false;
     //设置初始位置
     //setBtnPos();
+    setBtnComPos();
+    setBtnComIcon();
+    m_pBtnCom->setFixedSize(20,20);
+    m_pBtnCom->setIconSize(QSize(20,20));
+    m_pBtnCom->setVisible(true);
+    m_pBtnCom->setStyleSheet("border:none;");
     m_l_R = 0;
 
 
     connect(m_sp,SIGNAL(splitterMoved(int,int)),this,SLOT(sl_splitterMoved(int,int)));
     connect(m_pButton,SIGNAL(clicked()),this,SLOT(sl_btnClicked()));
+    connect(m_pBtnCom,SIGNAL(clicked()),this,SLOT(sl_btnComClicked()));
 
     m_Lframe->setMouseTracking(true);
     m_Rframe->setMouseTracking(true);
@@ -173,8 +203,8 @@ void Widget::initSplitterForm()
 void Widget::setBtnPos()//把Button移动到分割线中间位置
 {
     //界面的
-    int width=m_Lframe->width()-m_pButton->width();
-    int heigh=(m_Lframe->height())/2;
+    int width=m_Lframe->width();
+    int heigh=(m_Lframe->height())/2+ui->comWidget->height();
      //int heigh=(m_Lframe->height())/2+ui->widgetTitle->height();
      qDebug()<<"m_Lframe width"<<m_Lframe->width();
      qDebug()<<"m_Lframe heigh"<<m_Lframe->height();
@@ -193,6 +223,26 @@ void Widget::setBtnIcon()
      else
      {
          m_pButton->setIcon(QIcon("://qss/psblack/add_right.png"));
+    }
+}
+
+void Widget::setBtnComPos()
+{
+    //界面的
+    int width=ui->comWidget->width()-50;
+    int heigh=ui->comWidget->height();
+     m_pBtnCom->move(width,heigh);
+}
+
+void Widget::setBtnComIcon()
+{
+    if(1)
+     {
+         m_pBtnCom->setIcon(QIcon("://qss/psblack/add_top.png"));
+     }
+     else
+     {
+         m_pBtnCom->setIcon(QIcon("://qss/psblack/add_bottom.png"));
     }
 }
 
@@ -291,3 +341,71 @@ void Widget::sl_btnClicked()//设置左右布局的宽度
      setBtnIcon();
 }
 
+void Widget::sl_btnComClicked()
+{
+    qDebug()<<"sl_btnComClicked";
+}
+
+void Widget::initSerial()
+{
+    m_serial = new SerialPart();
+    m_serial->setuiWidget(this);
+    m_serial->Serialfind_port();
+
+}
+
+
+void Widget::on_btnConnect_clicked()
+{
+
+    qDebug() << "OpenPortName" << ui->btnConnect->text();
+    if(ui->btnConnect->text() == "close")
+    {
+        qDebug() << "OpenPortName 0 " << ui->btnConnect->text();
+        ui->led_status->setStyleSheet("background-color: rgb(85, 255, 0)");
+        ui->btnConnect->setText("Connect");
+        m_serial->getserialport()->clear();        //清空缓存区
+        m_serial->getserialport()->close();        //关闭串口
+//        //遍历能打开的串口设备，添加到ui界面的Item列表
+        m_serial->Serialfind_port();
+        ui->textBrowser->clear();
+//        this->Serialfind_port();
+        return;
+    }
+//    if(ui->btnConnect->text() == tr("Connect"))
+//    {
+//        qDebug() << "OpenPortName 1 " << ui->btnConnect->text();
+//        ui->led_status->setStyleSheet("background-color: rgb(255, 0, 0)");
+//        ui->btnConnect->setText("close");
+//    }
+ #if 1
+    //find_port();     //重新查找com
+    //初始化串口
+    qDebug() << "COMPORTName" <<ui->Serial_PortBox->currentText();
+    //源内容："COM1:Virtual Serial Port (Eltima Softwate)"
+    qDebug() << "COMPORTName sub" <<ui->Serial_PortBox->currentText().mid(0,4);
+    m_serial->getserialport()->setPortName(ui->Serial_PortBox->currentText().mid(0,4));        //设置串口名
+    if(m_serial->getserialport()->open(QIODevice::ReadWrite))              //打开串口成功
+    {
+        //ui->Serial_Label_Open->setStyleSheet("image: url(:/serialimage/open)");
+        //ui->btnConnect->setText("close");
+        m_serial->getserialport()->setBaudRate(115200);                    //设置波特率
+        m_serial->getserialport()->setDataBits(QSerialPort::Data8);         //数据位
+        m_serial->getserialport()->setParity(QSerialPort::NoParity);           //设置奇偶校验
+        m_serial->getserialport()->setStopBits(QSerialPort::OneStop);//设置停止位
+        m_serial->getserialport()->setFlowControl(QSerialPort::NoFlowControl);     //设置流控制
+        //连接槽函数
+        connect(m_serial->getserialport(),SIGNAL(readyRead()),m_serial,SLOT(SerialRead_Date()));
+        //connect(m_serial->getserialport(), &QSerialPort::readyRead, m_serial, SLOT(SerialRead_Date()));
+        //打开串口控件可用
+        ui->led_status->setStyleSheet("background-color: rgb(255, 0, 0)");
+        ui->btnConnect->setText("close");
+    }
+    else    //打开失败提示
+    {
+        //Serialsleep(100);
+
+        QMessageBox::information(this,tr("Erro"),tr("Open the failure"),QMessageBox::Ok);
+    }
+#endif
+}

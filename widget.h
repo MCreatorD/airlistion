@@ -5,7 +5,8 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QSplitter>
-
+#include "SerialPart.h"
+#include <QTextEdit>
 namespace Ui {
 class Widget;
 }
@@ -35,15 +36,22 @@ private:
     Ui::Widget *ui;
 
 public:
+    inline Ui::Widget * getUi()
+    {
+        return ui;
+    }
     void setBtnPos();
     void setBtnIcon();
+    void setBtnComPos();
+    void setBtnComIcon();
 private:
     //分割符中的按钮after Splitter
     QPushButton *m_pButton;
+    QPushButton *m_pBtnCom;
     //右边窗口 接ui
     QFrame *m_Rframe;
     //左边窗口 接ui
-    QLabel *m_Lframe;
+    QTextEdit *m_Lframe;
     //分割器
     QSplitter *m_sp;
 
@@ -63,6 +71,15 @@ private slots:
     void initSplitterForm();
     void sl_splitterMoved(int pos, int index);
     void sl_btnClicked();
+    void sl_btnComClicked();
+
+    void on_btnConnect_clicked();
+
+private:
+    class SerialPart *m_serial;
+public:
+    void initSerial(void);
+
 };
 
 #endif // WIDGET_H

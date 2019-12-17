@@ -130,7 +130,7 @@ void AppInit::dealmousePressEvent(QObject *obj, QMouseEvent *event)
          }
          break;
      case Qt::RightButton:
-         w->close();
+         //w->close();
          break;
      default:
          //QWidget::mousePressEvent(event);
