@@ -150,8 +150,9 @@ void Widget::initSplitterForm()
     m_Rframe=ui->textBrowser;
     m_sp= ui->splitter;
 
+
     //初始化分隔符
-    m_pButton= new QPushButton(this); // after Splitter
+    m_pButton= new QPushButton(ui->page1); // after Splitter
     m_bInitShow=false;
     //设置初始位置
     //setBtnPos();
@@ -172,13 +173,14 @@ void Widget::initSplitterForm()
 void Widget::setBtnPos()//把Button移动到分割线中间位置
 {
     //界面的
-    int width=m_Lframe->width();
-     int heigh=(m_Lframe->height())/2+ui->widgetTitle->height();
+    int width=m_Lframe->width()-m_pButton->width();
+    int heigh=(m_Lframe->height())/2;
+     //int heigh=(m_Lframe->height())/2+ui->widgetTitle->height();
      qDebug()<<"m_Lframe width"<<m_Lframe->width();
      qDebug()<<"m_Lframe heigh"<<m_Lframe->height();
      qDebug()<<"width"<<width;
      qDebug()<<"heigh"<<heigh;
-
+     if(width<0)width=0;
      m_pButton->move(width,heigh);
 }
 
