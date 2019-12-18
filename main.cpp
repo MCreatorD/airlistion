@@ -1,8 +1,9 @@
-#include "widget.h"
+﻿#include "widget.h"
 #include <QApplication>
 #include "appinit.h"
 #include <QTextCodec>
 #include <QFile>
+//#pragma execution_character_set("utf-8")
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -17,7 +18,7 @@ int main(int argc, char *argv[])
     QTextCodec::setCodecForCStrings(codec);
     QTextCodec::setCodecForTr(codec);
 #else
-    QTextCodec *codec = QTextCodec::codecForName("utf-8");
+    QTextCodec *codec = QTextCodec::codecForName("gbk");
     QTextCodec::setCodecForLocale(codec);
 #endif
 

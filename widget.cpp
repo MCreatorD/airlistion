@@ -368,7 +368,7 @@ void Widget::on_btnConnect_clicked()
         m_serial->getserialport()->close();        //关闭串口
 //        //遍历能打开的串口设备，添加到ui界面的Item列表
         m_serial->Serialfind_port();
-        ui->textBrowser->clear();
+        //ui->textBrowser->clear();
 //        this->Serialfind_port();
         return;
     }
@@ -395,7 +395,7 @@ void Widget::on_btnConnect_clicked()
         m_serial->getserialport()->setStopBits(QSerialPort::OneStop);//设置停止位
         m_serial->getserialport()->setFlowControl(QSerialPort::NoFlowControl);     //设置流控制
         //连接槽函数
-        connect(m_serial->getserialport(),SIGNAL(readyRead()),m_serial,SLOT(SerialRead_Date()));
+        connect(m_serial->getserialport(),SIGNAL(readyRead()),m_serial,SLOT(comdelay()));
         //connect(m_serial->getserialport(), &QSerialPort::readyRead, m_serial, SLOT(SerialRead_Date()));
         //打开串口控件可用
         ui->led_status->setStyleSheet("background-color: rgb(255, 0, 0)");

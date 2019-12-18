@@ -7,6 +7,7 @@
 #include <QtSerialPort/QSerialPortInfo>
 #include "ui_widget.h"
 #include <QDebug>
+#include <QTimer>
 
 namespace Ui {
 class Widget;
@@ -20,6 +21,7 @@ public:
 signals:
 
 public slots:
+    void comdelay();
     void SerialRead_Date();       //读取串口数据
 public://对于串口读取查找
     //void SerialRead_Date(class Widget *w);       //读取串口数据
@@ -31,7 +33,8 @@ public:
     }
  private:
     QSerialPort *serialport_m;
-
+    QByteArray buf;
+    QTimer time;
  //链接界面
     class Widget *w;
   public:
