@@ -7,6 +7,8 @@
 #include <QSplitter>
 #include "SerialPart.h"
 #include <QTextEdit>
+#include <QThread>
+
 namespace Ui {
 class Widget;
 }
@@ -14,7 +16,7 @@ class Widget;
 class Widget : public QWidget
 {
     Q_OBJECT
-
+    QThread workerThread;
 public:
     explicit Widget(QWidget *parent = 0);
     ~Widget();
@@ -74,12 +76,15 @@ private slots:
     void sl_btnComClicked();
 
     void on_btnConnect_clicked();
+    void updateTextB(QStringList &data);
 
 private:
     class SerialPart *m_serial;
 public:
     void initSerial(void);
-
+    void addUartNumToUi(QStringList list);
+signals:
+    void operate(const QString &);
 };
 
 #endif // WIDGET_H

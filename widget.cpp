@@ -15,6 +15,8 @@ Widget::Widget(QWidget *parent) :
 
 Widget::~Widget()
 {
+    workerThread.quit();
+    workerThread.wait();
     delete ui;
 }
 
@@ -349,8 +351,27 @@ void Widget::sl_btnComClicked()
 void Widget::initSerial()
 {
     m_serial = new SerialPart();
-    m_serial->setuiWidget(this);
-    m_serial->Serialfind_port();
+    m_serial->moveToThread(&this->workerThread);
+    connect(&workerThread, &QThread::finished, m_serial, &QObject::deleteLater);
+    connect(this, &Widget::operate, m_serial, &SerialPart::doWork);
+    qRegisterMetaType<QStringList&>,QStringList&;
+    connect(m_serial,&SerialPart::CommitList,this,&Widget::updateTextB);
+    this->addUartNumToUi(m_serial->Serialfind_port());
+    workerThread.start();
+//    m_serial->setuiWidget(this);
+//    m_serial->Serialfind_port();
+
+}
+
+void Widget::addUartNumToUi(QStringList list)
+{
+    qDebug()<<"addUartNumToUi";
+    ui->Serial_PortBox->clear();
+    for (int i = 0; i < list.size(); ++i)
+    {
+        //qDebug() << list.at(i);//fromLocal8Bit
+        ui->Serial_PortBox->addItem(list.at(i));
+    }
 
 }
 
@@ -367,7 +388,7 @@ void Widget::on_btnConnect_clicked()
         m_serial->getserialport()->clear();        //清空缓存区
         m_serial->getserialport()->close();        //关闭串口
 //        //遍历能打开的串口设备，添加到ui界面的Item列表
-        m_serial->Serialfind_port();
+            addUartNumToUi(m_serial->Serialfind_port());
         //ui->textBrowser->clear();
 //        this->Serialfind_port();
         return;
@@ -383,8 +404,9 @@ void Widget::on_btnConnect_clicked()
     //初始化串口
     qDebug() << "COMPORTName" <<ui->Serial_PortBox->currentText();
     //源内容："COM1:Virtual Serial Port (Eltima Softwate)"
-    qDebug() << "COMPORTName sub" <<ui->Serial_PortBox->currentText().mid(0,4);
-    m_serial->getserialport()->setPortName(ui->Serial_PortBox->currentText().mid(0,4));        //设置串口名
+    //qDebug() << "COMPORTName sub" <<ui->Serial_PortBox->currentText().mid(0,4);
+    qDebug() << "COMPORTName sub" <<ui->Serial_PortBox->currentText().split(":").at(0);
+    m_serial->getserialport()->setPortName(ui->Serial_PortBox->currentText().split(":").at(0));        //设置串口名
     if(m_serial->getserialport()->open(QIODevice::ReadWrite))              //打开串口成功
     {
         //ui->Serial_Label_Open->setStyleSheet("image: url(:/serialimage/open)");
@@ -395,7 +417,9 @@ void Widget::on_btnConnect_clicked()
         m_serial->getserialport()->setStopBits(QSerialPort::OneStop);//设置停止位
         m_serial->getserialport()->setFlowControl(QSerialPort::NoFlowControl);     //设置流控制
         //连接槽函数
-        connect(m_serial->getserialport(),SIGNAL(readyRead()),m_serial,SLOT(comdelay()));
+        QString str = ui->Serial_PortBox->currentText().split(":").at(0);
+        emit operate(str);
+        //connect(m_serial->getserialport(),SIGNAL(readyRead()),m_serial,SLOT(comdelay()));
         //connect(m_serial->getserialport(), &QSerialPort::readyRead, m_serial, SLOT(SerialRead_Date()));
         //打开串口控件可用
         ui->led_status->setStyleSheet("background-color: rgb(255, 0, 0)");
@@ -408,4 +432,43 @@ void Widget::on_btnConnect_clicked()
         QMessageBox::information(this,tr("Erro"),tr("Open the failure"),QMessageBox::Ok);
     }
 #endif
+}
+
+void Widget::updateTextB(QStringList &data)
+{
+    qDebug()<<"updateTextB";
+    QString str;
+   if(!data.isEmpty())          //将数据显示到文本串口
+    {
+       for(int i = 0; i <data.count();i++)
+       {
+           //str = data.at(i);
+        if(data.at(i).startsWith(QString::fromLocal8Bit("↓A")))
+        {
+            str += " \" <font color=\"#FF0000\">"+data.at(i)+"</font> \" ";
+        }
+        else if(data.at(i).startsWith(QString::fromLocal8Bit("↑A")))
+        {
+            str += " \"<font color=\"#00FF00\">"+data.at(i)+"</font> \" ";
+        }
+
+             ui->textBrowser->append(str);
+             str.clear();
+       }
+//        //获取之前的文件信息
+//        QString str ;//= w->getUi()->textBrowser->toHtml();
+//        qDebug()<<buf.toHex().at(0)<<buf.toHex().at(1)<<buf.toHex().at(2)<<buf.toHex().at(3);
+//        if(buf.toHex().at(0) == 'a'&&buf.toHex().at(1) == '1'&&buf.toHex().at(2) == 'f'&&buf.toHex().at(3) == 'd')
+//        {
+//            //qDebug()<<"buf"<<0;
+//           str += " \" <font color=\"#FF0000\">"+QString::fromLocal8Bit(buf)+"</font> \" ";
+//        }
+//        else if(buf.toHex().at(0) == 'a'&&buf.toHex().at(1) == '1'&&buf.toHex().at(2) == 'f'&&buf.toHex().at(3) == 'c')
+//        {
+//            //qDebug()<<"buf"<<1;
+//            str += " \"<font color=\"#00FF00\">"+QString::fromLocal8Bit(buf)+"</font> \" ";
+//        }
+
+    }
+   //buf.clear();    //清空缓存区
 }
