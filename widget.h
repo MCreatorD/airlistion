@@ -8,7 +8,7 @@
 #include "SerialPart.h"
 #include <QTextEdit>
 #include <QThread>
-
+#include <QTimer>
 namespace Ui {
 class Widget;
 }
@@ -46,6 +46,8 @@ public:
     void setBtnIcon();
     void setBtnComPos();
     void setBtnComIcon();
+    void timerUpdate(void);
+    void initTimer(void);
 private:
     //分割符中的按钮after Splitter
     QPushButton *m_pButton;
@@ -64,6 +66,8 @@ private:
     //分割符中间按钮的方向
     bool m_l_R;
 
+    QTimer *timer ;
+    QString statusTime;
 protected:
     void showEvent(QShowEvent *event);
     void resizeEvent(QResizeEvent *event);
@@ -76,7 +80,7 @@ private slots:
     void sl_btnComClicked();
 
     void on_btnConnect_clicked();
-    void updateTextB(QStringList &data);
+    void updateTextB(QStringList data);
 
 private:
     class SerialPart *m_serial;

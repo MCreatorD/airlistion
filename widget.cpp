@@ -10,7 +10,10 @@ Widget::Widget(QWidget *parent) :
     this->initForm();
     //初始化分割符
     this->initSplitterForm();
+
+    this->initTimer();
     this->initSerial();
+
 }
 
 Widget::~Widget()
@@ -248,6 +251,23 @@ void Widget::setBtnComIcon()
     }
 }
 
+void Widget::timerUpdate()
+{
+    QDateTime time = QDateTime::currentDateTime();
+    //QString str =
+    statusTime = time.toString("yyyy-MM-dd hh:mm:ss dddd");
+    ui->sysTimeLab->setText(statusTime);
+    //qDebug()<<"time"<<time<<"str"<<str;
+}
+
+void Widget::initTimer()
+{
+    timer = new QTimer(this);
+    connect(timer,&QTimer::timeout,this,&Widget::timerUpdate);
+    timer->start(1000);
+    timerUpdate();
+}
+
 void Widget::showEvent(QShowEvent *event)
 {
     qDebug()<<"showEvent";
@@ -354,13 +374,16 @@ void Widget::initSerial()
     m_serial->moveToThread(&this->workerThread);
     connect(&workerThread, &QThread::finished, m_serial, &QObject::deleteLater);
     connect(this, &Widget::operate, m_serial, &SerialPart::doWork);
-    qRegisterMetaType<QStringList&>,QStringList&;
-    connect(m_serial,&SerialPart::CommitList,this,&Widget::updateTextB);
+    qRegisterMetaType<QStringList> ("QStringList ");
+    connect(m_serial,SIGNAL(CommitList(QStringList)),this,SLOT(updateTextB(QStringList)));
     this->addUartNumToUi(m_serial->Serialfind_port());
     workerThread.start();
-//    m_serial->setuiWidget(this);
-//    m_serial->Serialfind_port();
 
+//    //默认就是保存文件的
+    QString filepath = "E:\\Qt\\jiank1\\jiank\\log.txt";
+    qDebug()<<"filepath"<<filepath;
+            QFile file(filepath);
+    file.open(QIODevice::ReadWrite);
 }
 
 void Widget::addUartNumToUi(QStringList list)
@@ -434,9 +457,9 @@ void Widget::on_btnConnect_clicked()
 #endif
 }
 
-void Widget::updateTextB(QStringList &data)
+void Widget::updateTextB(QStringList data)
 {
-    qDebug()<<"updateTextB";
+    qDebug()<<"updateTextB"<<data.size();
     QString str;
    if(!data.isEmpty())          //将数据显示到文本串口
     {
@@ -453,6 +476,7 @@ void Widget::updateTextB(QStringList &data)
         }
 
              ui->textBrowser->append(str);
+             ui->textBrowser->moveCursor(QTextCursor::End);
              str.clear();
        }
 //        //获取之前的文件信息

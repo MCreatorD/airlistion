@@ -445,6 +445,13 @@ border-radius:10px;
            </spacer>
           </item>
           <item>
+           <widget class="QLabel" name="sysTimeLab">
+            <property name="text">
+             <string>11111</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="btnSave">
             <property name="text">
              <string>保存记录</string>

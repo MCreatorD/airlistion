@@ -25,7 +25,7 @@ public:
 
 signals:
     void resultReady(const QString &result);
-    void CommitList(QStringList &);
+    void CommitList(QStringList);
 public slots:
     void comdelay();
     void SerialRead_Date();       //读取串口数据

@@ -25,7 +25,7 @@ void SerialPart::SerialRead_Date()
     {
         //获取之前的文件信息
         QString str ;//= w->getUi()->textBrowser->toHtml();
-        qDebug()<<buf.toHex().at(0)<<buf.toHex().at(1)<<buf.toHex().at(2)<<buf.toHex().at(3);
+        //qDebug()<<buf.toHex().at(0)<<buf.toHex().at(1)<<buf.toHex().at(2)<<buf.toHex().at(3);
         if(buf.toHex().at(0) == 'a'&&buf.toHex().at(1) == '1'&&buf.toHex().at(2) == 'f'&&buf.toHex().at(3) == 'd')
         {
             //qDebug()<<"buf"<<0;
@@ -53,8 +53,18 @@ void SerialPart::doWork(const QString &paramete)
             {
                 QString str = QString::fromLocal8Bit(serialport_m->readAll());
                 QStringList tmplist = SearchComitList(str);
-                qDebug()<<"Source:"<<str<<"start:"<<str.startsWith(QString::fromLocal8Bit("↓A"))<<str.startsWith(QString::fromLocal8Bit("↑A"))<<"end:"<<str.endsWith("\r\n")<<"end";
-                emit CommitList(tmplist);
+                //qDebug()<<"Source:"<<str<<"start:"<<str.startsWith(QString::fromLocal8Bit("↓A"))<<str.startsWith(QString::fromLocal8Bit("↑A"))<<"end:"<<str.endsWith("\r\n")<<"end";
+                //qDebug()<<"QStringList:"<<tmplist.size();
+                if(!tmplist.isEmpty())
+                {
+                    emit CommitList(tmplist);
+                    //判断是否需要保存日志
+                    if(1)
+                    {
+
+
+                    }
+                }
             }
         }
 //        if(hasData)
@@ -104,6 +114,7 @@ QStringList SerialPart::SearchComitList(QString Buf)
     QStringList ret;
     if(hasHead==true)//之前有头部信息没有使用则 拼接后面的数据
     {
+        qDebug()<<"sub add sub";
         Buf = subBuf + Buf;
     }
 
@@ -125,7 +136,7 @@ QStringList SerialPart::SearchComitList(QString Buf)
     {
         //查找里面总共有多少消息帧
         ret = Buf.split("\r\n");
-        qDebug()<<"ret cnt0"<<ret.count()-1<<"ret"<<ret.at(0);
+        //qDebug()<<"ret cnt0"<<ret.count()-1<<"ret"<<ret.at(0);
 
         hasHead = false;
         hasEnd  = false;
@@ -134,40 +145,42 @@ QStringList SerialPart::SearchComitList(QString Buf)
     {
         //查找最后一个出现"\r\n"的位置 保存后一段数据
          int position = Buf.lastIndexOf("\r\n");
-         qDebug()<<"all"<<Buf.size()<<"sub"<<position;
+         //qDebug()<<"all"<<Buf.size()<<"sub"<<position;
          if(position == -1)
          {
-             qDebug()<<"error";
+             hasHead = true;
+             qDebug()<<"sub  buff";
+             subBuf = Buf;
             return    ret;
          }
          //含有完整帧则先提取信息
          //查找里面总共有多少消息帧
          ret = Buf.split("\r\n");
-         qDebug()<<"ret cnt1"<<ret.count()-1<<"ret"<<ret.at(0);
+         //qDebug()<<"ret cnt1"<<ret.count()-1<<"ret"<<ret.at(0);
 
         //保留\r\n之后的数据同时判断是否是下个数据的开头 如果是的则标记有头 否则标记无头
         if(Buf.size() - position == 3)//\r\n 之后只有一个字符
         {
-            if(Buf[(position+2)] == QString::fromLocal8Bit("↓"))
+            if(Buf[(position+2)] == QString::fromLocal8Bit("↓")||Buf[(position+2)] == QString::fromLocal8Bit("↑"))
             {
                 qDebug()<<"ok";
                 hasHead=true;
                 subBuf = Buf.mid(position+3,Buf.size());
-                qDebug()<<"subBuf:"<<subBuf;
+                //qDebug()<<"subBuf:"<<subBuf;
             }else
             {
                 hasHead=false;
             }
         }else if(Buf.size()-position>3)//\r\n 之后大于一个字符
         {
-            if(Buf[(position+2)] == QString::fromLocal8Bit("↓"))
+            if(Buf[(position+2)] == QString::fromLocal8Bit("↓")||Buf[(position+2)] == QString::fromLocal8Bit("↑"))
             {
                 if(Buf[(position+3)] == QString::fromLocal8Bit("A"))
                 {
                     qDebug()<<"ok";
                     hasHead=true;
                     subBuf = Buf.mid(position+4,Buf.size());
-                    qDebug()<<"subBuf:"<<subBuf;
+                    //qDebug()<<"subBuf:"<<subBuf;
                 }
 
             }else
