@@ -9,6 +9,7 @@
 #include <QTextEdit>
 #include <QThread>
 #include <QTimer>
+#include <QFile>
 namespace Ui {
 class Widget;
 }
@@ -46,7 +47,7 @@ public:
     void setBtnIcon();
     void setBtnComPos();
     void setBtnComIcon();
-    void timerUpdate(void);
+    QString timerUpdate(void);
     void initTimer(void);
 private:
     //分割符中的按钮after Splitter
@@ -68,6 +69,8 @@ private:
 
     QTimer *timer ;
     QString statusTime;
+    QString CurrentFilePath;
+    QFile *Currentfile;
 protected:
     void showEvent(QShowEvent *event);
     void resizeEvent(QResizeEvent *event);

@@ -20,6 +20,7 @@ Widget::~Widget()
 {
     workerThread.quit();
     workerThread.wait();
+    Currentfile->close();
     delete ui;
 }
 
@@ -251,13 +252,16 @@ void Widget::setBtnComIcon()
     }
 }
 
-void Widget::timerUpdate()
+QString Widget::timerUpdate()
 {
+    QString filename;
     QDateTime time = QDateTime::currentDateTime();
     //QString str =
     statusTime = time.toString("yyyy-MM-dd hh:mm:ss dddd");
+    filename = time.toString("yyyy-MM-dd hh-mm-ss");
     ui->sysTimeLab->setText(statusTime);
-    //qDebug()<<"time"<<time<<"str"<<str;
+    //qDebug()<<"time"<<time<<"str"<<filename;
+    return filename;
 }
 
 void Widget::initTimer()
@@ -265,7 +269,28 @@ void Widget::initTimer()
     timer = new QTimer(this);
     connect(timer,&QTimer::timeout,this,&Widget::timerUpdate);
     timer->start(1000);
-    timerUpdate();
+    //保存初始时名称
+    CurrentFilePath = QApplication::applicationDirPath()+"/"+timerUpdate();
+    //创建文件
+    //    //默认就是保存文件的
+    //qDebug()<<"CurrentFilePath"<<QApplication::applicationDirPath()+"/"+CurrentFilePath;
+    qDebug()<<"CurrentFilePath"<<CurrentFilePath;
+    //Currentfile = new QFile(CurrentFilePath);
+    Currentfile = new QFile;
+    Currentfile->setFileName(CurrentFilePath);
+    //QFile file(CurrentFilePath);
+    if(Currentfile->open(QIODevice::ReadWrite | QIODevice::Text | QFile::Append))
+    {
+        Currentfile->write("---------------------------------Start Recode Data---------------------------------\r\n");
+        qDebug()<<"file ok";
+        Currentfile->flush();
+        //Currentfile->close();
+    }else
+    {
+        qDebug()<<"file error";
+
+    }
+
 }
 
 void Widget::showEvent(QShowEvent *event)
@@ -378,12 +403,6 @@ void Widget::initSerial()
     connect(m_serial,SIGNAL(CommitList(QStringList)),this,SLOT(updateTextB(QStringList)));
     this->addUartNumToUi(m_serial->Serialfind_port());
     workerThread.start();
-
-//    //默认就是保存文件的
-    QString filepath = "E:\\Qt\\jiank1\\jiank\\log.txt";
-    qDebug()<<"filepath"<<filepath;
-            QFile file(filepath);
-    file.open(QIODevice::ReadWrite);
 }
 
 void Widget::addUartNumToUi(QStringList list)
@@ -477,6 +496,29 @@ void Widget::updateTextB(QStringList data)
 
              ui->textBrowser->append(str);
              ui->textBrowser->moveCursor(QTextCursor::End);
+             //保存到文件
+             //Currentfile->write((const char *)str.data());
+             if(Currentfile->isOpen())
+             {
+                 Currentfile->write("["+QTime::currentTime().toString("hh:mm:ss").toLocal8Bit()+"]  "+data.at(i).toLocal8Bit()+"\n");
+                 //qDebug()<<"Currentfile isOpen"<<Currentfile->fileName();
+                 Currentfile->flush();
+             }else
+             {
+                 qDebug()<<"Currentfile file is close";
+                 if(Currentfile->open(QIODevice::ReadWrite | QIODevice::Text | QFile::Append))
+                 {
+                     //Currentfile->write("test");
+                     qDebug()<<"file ok";
+                     Currentfile->flush();
+                     //Currentfile->close();
+                 }else
+                 {
+                     qDebug()<<"file error";
+                 }
+             }
+
+
              str.clear();
        }
 //        //获取之前的文件信息
